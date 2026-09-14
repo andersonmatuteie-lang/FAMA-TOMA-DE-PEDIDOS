@@ -286,7 +286,7 @@ let menuActual = { entradas: [], menus: [], meseros: [] };
 let entradasSel = [];
 let menusSel = [];
 
-async function cargarMenu(){
+async function cargarMenu(reintentar = true){
   try{
     const res = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
@@ -294,14 +294,20 @@ async function cargarMenu(){
     menuActual.menus = data.menus || [];
     menuActual.meseros = data.meseros || [];
   }catch(e){
-    menuActual.entradas = [];
-    menuActual.menus = [];
-    menuActual.meseros = [];
+    console.log("No se pudo cargar el menu, reintentando en 5s...", e);
+    if(reintentar){
+      setTimeout(() => cargarMenu(true), 5000);
+    }
+    return; // no borra lo que ya estaba cargado antes
   }
   llenarSelect(document.getElementById('select-entrada'), menuActual.entradas, 'Selecciona una entrada');
   llenarSelect(document.getElementById('select-menu'), menuActual.menus, 'Selecciona un menú');
   llenarSelect(document.getElementById('mesero'), menuActual.meseros, 'Selecciona tu nombre');
 }
+
+// Refresca el menu solo cada 2 minutos, por si el admin lo actualizo
+// o por si una carga anterior fallo silenciosamente
+setInterval(() => cargarMenu(true), 2 * 60 * 1000);
 
 function llenarSelect(select, items, placeholder){
   select.innerHTML = `<option value="">${placeholder}</option>` +
