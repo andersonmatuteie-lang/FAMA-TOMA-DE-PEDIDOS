@@ -1,0 +1,32 @@
+{
+  "name": "Fama — Toma de pedidos",
+  "short_name": "Fama Pedidos",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#06463f",
+  "theme_color": "#06463f",
+  "lang": "es-PE",
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
