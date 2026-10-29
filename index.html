@@ -212,7 +212,10 @@ textarea,input{ user-select:text; -webkit-user-select:text; }
 *,*::before,*::after{ animation:none!important; transition:none!important; }
 .pildora.falta{ background:var(--aji); color:var(--aji-tinta); }
 .mesas{ grid-template-columns:repeat(3, minmax(0,1fr)); }
-.mesas .mesa:last-child{ grid-column:1 / -1; }
+.mesas .mesa:last-child{ grid-column:span 2; }
+.mesa-display{ min-height:56px; margin-bottom:8px; border-radius:var(--r-chico); border:2px solid var(--marca); display:flex; align-items:center; justify-content:center; gap:8px; font-size:18px; font-weight:700; color:var(--tenue); }
+.mesa-display b{ font-size:30px; font-weight:900; color:var(--tinta); }
+.mesa-display span{ font-size:15px; }
 .mesas-letras{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
 .mesas-letras .mesa{ min-height:64px; font-size:24px; }
 .gira{ display:none; position:fixed; inset:0; z-index:100; background:var(--marca-hondo); color:#fff; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:32px; }
@@ -297,7 +300,7 @@ const hoyISO = () => new Date().toLocaleDateString("en-CA");
 /* Las comas separan platos en el Sheet y en la impresora: dentro de una nota se cambian por " / " */
 const sinComas = s => String(s || "").replace(/\s*,\s*/g, " / ").trim();
 /* Celdas que en el Sheet dicen "vacio" o están en blanco no son platos */
-const limpiarLista = l => (l || []).map(x => String(x).trim()).filter(x => x && x.toLowerCase() !== "vacio" && x.toLowerCase() !== "vacío");
+const limpiarLista = l => (l || []).map(x => String(x).trim()).filter(x => x);
 const ICO = {
   x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   menos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>',
@@ -341,11 +344,19 @@ function pintarMozo(){
   $("btn-mozo").classList.toggle("falta", !mozo);
 }
 function pintarMesas(){
-  const usadas = new Set(historial.filter(h => h.hoy === hoyISO()).map(h => h.mesa));
-  const boton = m => `<button class="mesa${usadas.has(m) ? " ocupada" : ""}" data-m="${m}" aria-pressed="${mesa === m}" aria-label="Mesa ${m}">${m}</button>`;
-  $("mesas").innerHTML = MESAS_NUMEROS.map(boton).join("");
-  $("mesas-letras").innerHTML = MESAS_LETRAS.map(boton).join("");
-  document.querySelectorAll(".mesa").forEach(b => b.onclick = () => { mesa = mesa === b.dataset.m ? "" : b.dataset.m; vibrar(8); pintarMesas(); pintarTicket(); });
+  if(!$("mesa-display")) $("mesas").insertAdjacentHTML("beforebegin", '<div class="mesa-display" id="mesa-display" aria-live="polite"></div>');
+  $("mesa-display").innerHTML = mesa ? `Mesa <b>${esc(mesa)}</b>` : '<span>Marca el número</span>';
+  const tecla = d => `<button class="mesa" data-d="${d}" aria-label="${d === "borrar" ? "Borrar" : d}">${d === "borrar" ? "⌫" : d}</button>`;
+  $("mesas").innerHTML = ["1","2","3","4","5","6","7","8","9","borrar","0"].map(tecla).join("");
+  $("mesas-letras").innerHTML = MESAS_LETRAS.map(m => `<button class="mesa" data-m="${m}" aria-pressed="${mesa === m}" aria-label="Mesa ${m}">${m}</button>`).join("");
+  $("mesas").querySelectorAll("[data-d]").forEach(b => b.onclick = () => {
+    const d = b.dataset.d;
+    if(d === "borrar") mesa = mesa.slice(0, -1);
+    else if(!/^\d+$/.test(mesa) || mesa === "0") mesa = d;     // si había letra o solo "0", empieza de nuevo
+    else if(mesa.length < 3) mesa += d;                          // arma 10, 11, 25…
+    vibrar(8); pintarMesas(); pintarTicket();
+  });
+  $("mesas-letras").querySelectorAll("[data-m]").forEach(b => b.onclick = () => { mesa = mesa === b.dataset.m ? "" : b.dataset.m; vibrar(8); pintarMesas(); pintarTicket(); });
 }
 const cantidadDe = (tipo, nombre) => lineas.filter(l => l.tipo === tipo && l.nombre === nombre).reduce((s, l) => s + l.cantidad, 0);
 function pintarPlatos(){
